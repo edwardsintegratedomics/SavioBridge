@@ -70,16 +70,15 @@ head(long_LOBset)
 
 
 
-# Step 4: Add treatment conditions to it
+# Step 4: Add treatment conditions to it ----
     #Metadata from https://www2.whoi.edu/staff/bvanmooy/gordon-and-betty-moore-foundation-project-data/
     # and the Excel spreadsheet
 
 #Make a new column called "treatment"
-treatments <- c("Control", "+NP", "+NPSi")
+  #The first two samples are controls (1129 and 1130), the next 3 are +NP, 
+treatments <- c("Control", "Control", "+NP", "+NP", "+NP", "+NPSi", "+NPSi", "+NPSi")
 num_compounds <- dim(LOBset)[1]
-treatment_col <- c(rep(treatments[1], num_compounds*2), 
-                   rep(treatments[2], num_compounds*3),
-                   rep(treatments[3], num_compounds*3))
+treatment_col <- rep(treatments, each=num_compounds)
 complete_LOBset <- mutate(long_LOBset, treatment_col)
 
 
