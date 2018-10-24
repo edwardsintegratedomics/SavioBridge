@@ -79,8 +79,41 @@ head(long_LOBset)
 treatments <- c("Control", "Control", "+NP", "+NP", "+NP", "+NPSi", "+NPSi", "+NPSi")
 num_compounds <- dim(LOBset)[1]
 treatment_col <- rep(treatments, each=num_compounds)
-complete_LOBset <- mutate(long_LOBset, treatment_col)
+full_LOBset <- mutate(long_LOBset, "treatment"=treatment_col)
+
+
+
+
+
+# Step 5: Append a column denoting the polarity ----
+complete_LOBset_pos <- mutate(full_LOBset, polarity="positive")
+
+
+
+
+
+
+# Step 6: Do everything again, but for the other polarity ----
+LOBset <- read.csv("LOBset_Neg.csv")
+col_names <- names(LOBset)
+sample_cols <- grep("Orbi", col_names, value = T)
+cols_to_keep <- c("peakgroup_mz", "peakgroup_rt", "compound_name",
+                  "species", "lipid_class", sample_cols)
+simple_LOBset <- select(LOBset, cols_to_keep)
+names(simple_LOBset)[1:5] <- c("m/z", "RT", "compound_name", "lipid_species", "lipid_class")
+long_LOBset <- melt(simple_LOBset, id=c("m/z", "RT", "compound_name", "lipid_species", "lipid_class"),
+                    value.name = "intensity", variable.name = "sample")
+treatments <- c("Control", "Control", "+NP", "+NP", "+NP", "+NPSi", "+NPSi", "+NPSi")
+num_compounds <- dim(LOBset)[1]
+treatment_col <- rep(treatments, each=num_compounds)
+full_LOBset <- mutate(long_LOBset, "treatment"=treatment_col)
+complete_LOBset_neg <- mutate(full_LOBset, polarity="negative")
+
+
+# Step 7: Append the two data frames by stacking them on top of each other ----
+complete_LOBset <- rbind(complete_LOBset_pos, complete_LOBset_neg)
+
 
 
 # Final step: Write out the data as a new csv file "Clean_LOBset_Pos.csv" ----
-write.csv(complete_LOBset, file = "Clean_LOBset_Pos.csv")
+write.csv(complete_LOBset, file = "Clean_LOBset.csv")
