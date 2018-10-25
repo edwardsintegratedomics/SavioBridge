@@ -8,7 +8,6 @@ library(reshape2)
 
 
 
-
 # Step 1: Import the data ----
 
 #Tell R where you are and where the data is
@@ -16,10 +15,11 @@ library(reshape2)
 setwd("~/Desktop/Elab/GitHub Things/SavioBridge/DYEatoms")
 
 #Read the data in and save it as the variable "LOBset"
-LOBset <- read.csv("LOBset_Pos.csv")
+LOBset <- read.csv("QuickDYE_Pos.csv")
 
 #Check that it loaded properly by looking at the first 6 rows
 head(LOBset)
+num_compounds <- dim(LOBset)[1]
 
 
 
@@ -69,6 +69,20 @@ head(long_LOBset)
 
 
 
+# Step 3.5: Normalize to DNPPE
+
+DNPPEs <- filter(long_LOBset, compound_name=="DNPPE"&RT>800)
+max_DNPPE <- max(DNPPEs$intensity)
+norm_factor <- max_DNPPE/DNPPEs$intensity
+norm_factor <- rep(norm_factor, each=num_compounds)
+
+norm_LOBset <- long_LOBset %>%
+  mutate("intensity"=intensity*norm_factor)
+
+
+
+
+
 
 # Step 4: Add treatment conditions to it ----
     #Metadata from https://www2.whoi.edu/staff/bvanmooy/gordon-and-betty-moore-foundation-project-data/
@@ -77,9 +91,8 @@ head(long_LOBset)
 #Make a new column called "treatment"
   #The first two samples are controls (1129 and 1130), the next 3 are +NP, 
 treatments <- c("Control", "Control", "+NP", "+NP", "+NP", "+NPSi", "+NPSi", "+NPSi")
-num_compounds <- dim(LOBset)[1]
 treatment_col <- rep(treatments, each=num_compounds)
-full_LOBset <- mutate(long_LOBset, "treatment"=treatment_col)
+full_LOBset <- mutate(norm_LOBset, "treatment"=treatment_col)
 
 
 
@@ -94,8 +107,9 @@ complete_LOBset_pos <- mutate(full_LOBset, polarity="positive")
 
 
 # Step 6: Do everything again, but for the other polarity ----
-LOBset <- read.csv("LOBset_Neg.csv")
+LOBset <- read.csv("QuickDYE_Neg.csv")
 col_names <- names(LOBset)
+num_compounds <- dim(LOBset)[1]
 sample_cols <- grep("Orbi", col_names, value = T)
 cols_to_keep <- c("peakgroup_mz", "peakgroup_rt", "compound_name",
                   "species", "lipid_class", sample_cols)
@@ -103,10 +117,15 @@ simple_LOBset <- select(LOBset, cols_to_keep)
 names(simple_LOBset)[1:5] <- c("m/z", "RT", "compound_name", "lipid_species", "lipid_class")
 long_LOBset <- melt(simple_LOBset, id=c("m/z", "RT", "compound_name", "lipid_species", "lipid_class"),
                     value.name = "intensity", variable.name = "sample")
+DNPPEs <- filter(long_LOBset, compound_name=="DNPPE"&RT>800)
+max_DNPPE <- max(DNPPEs$intensity)
+norm_factor <- max_DNPPE/DNPPEs$intensity
+norm_factor <- rep(norm_factor, each=num_compounds)
+norm_LOBset <- long_LOBset %>%
+  mutate("intensity"=intensity*norm_factor)
 treatments <- c("Control", "Control", "+NP", "+NP", "+NP", "+NPSi", "+NPSi", "+NPSi")
-num_compounds <- dim(LOBset)[1]
 treatment_col <- rep(treatments, each=num_compounds)
-full_LOBset <- mutate(long_LOBset, "treatment"=treatment_col)
+full_LOBset <- mutate(norm_LOBset, "treatment"=treatment_col)
 complete_LOBset_neg <- mutate(full_LOBset, polarity="negative")
 
 
