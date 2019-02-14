@@ -12,10 +12,10 @@ library(reshape2)
 
 #Tell R where you are and where the data is
   #You may have to change this depending on where the .csv file is found
-setwd("~/Desktop/Elab/GitHub Things/SavioBridge/DYEatoms")
+#setwd("~/Desktop/Elab/GitHub Things/SavioBridge/DYEatoms")
 
 #Read the data in and save it as the variable "LOBset"
-LOBset <- read.csv("QuickDYE_Pos.csv")
+LOBset <- read.csv("CollinsDYE_Pos.csv")
 
 #Check that it loaded properly by looking at the first 6 rows
 head(LOBset)
@@ -25,6 +25,9 @@ DNPPEs <- filter(LOBset, compound_name=="DNPPE"&peakgroup_rt>800)
 max_DNPPE <- max(DNPPEs[,10:17])
 norm_factor <- as.numeric(max_DNPPE/DNPPEs[,10:17])
 
+biomass <- filter(LOBset, compound_name=="Chl_a")
+max_chl <- max(biomass[,10:17])
+bio_factor <- as.numeric(max_chl/biomass[,10:17])
 
 
 
@@ -39,6 +42,7 @@ LOBset <- LOBset %>% mutate(questionable=C3c+C3f+C3r+C4+C5+C6a+C6b) %>%
 
 num_compounds <- dim(LOBset)[1]
 norm_factor <- rep(norm_factor, each=num_compounds)
+bio_factor <- rep(bio_factor, each=num_compounds)
 
 #Grab only the columns we want: RT, m/z, compound name, lipid species, lipid class, sample number
   #And save it as a new variable "simple_LOBset"
@@ -87,7 +91,9 @@ norm_LOBset <- long_LOBset %>%
   mutate("intensity"=intensity*norm_factor)
 
 
-
+# Step 3.6: Normalize to chlorophyll
+norm_LOBset <- norm_LOBset %>%
+  mutate("intensity"=intensity*bio_factor)
 
 
 
@@ -112,7 +118,7 @@ complete_LOBset_pos <- mutate(full_LOBset, polarity="positive")
 
 
 # Step 6: Do everything again, but for the other polarity ----
-LOBset <- read.csv("QuickDYE_Neg.csv")
+LOBset <- read.csv("CollinsDYE_Neg.csv")
 DNPPEs <- filter(LOBset, compound_name=="DNPPE"&peakgroup_rt>800)
 max_DNPPE <- max(DNPPEs[,10:17])
 norm_factor <- as.numeric(max_DNPPE/DNPPEs[,10:17])
